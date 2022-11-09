@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { contractAddresses, abi } from "../constants";
 import { useWeb3Contract, useMoralis } from "react-moralis";
+import { Button } from "web3uikit";
+import { useNotification } from "web3uikit";
 
 export default function LotteryEntrance() {
   const { chainId: chainIdHex, isWeb3Enabled, Moralis } = useMoralis();
+  const dispatch = useNotification();
   const chainId = parseInt(chainIdHex);
   const contractAddress =
     chainId in contractAddresses ? contractAddresses[chainId][0] : null;
@@ -24,6 +27,16 @@ export default function LotteryEntrance() {
     msgValue: entranceFee,
   });
 
+  const handleSuccess = async (tx) => {
+    await tx.wait(1);
+    dispatch({
+      type: "info",
+      message: "Transaction complete!",
+      position: "topR",
+      title: "Enter lottery",
+    });
+  };
+
   useEffect(() => {
     if (isWeb3Enabled) {
       getEntranceFee().then((entranceFee) => setEntranceFee(entranceFee || 0));
@@ -34,12 +47,13 @@ export default function LotteryEntrance() {
     <div>
       {contractAddress ? (
         <div className="flex space-x-3">
-          <button
-            onClick={async () => await enterLottery()}
-            className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            Enter lottery
-          </button>
+          <Button
+            onClick={async () =>
+              await enterLottery({ onSuccess: handleSuccess })
+            }
+            text="Enter lottery"
+            theme="primary"
+          />
           <div>Entrance Fee: {Moralis.Units.FromWei(entranceFee)} ETH</div>
         </div>
       ) : (
