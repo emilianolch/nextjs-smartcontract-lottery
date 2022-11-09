@@ -28,12 +28,17 @@ export default function LotteryEntrance() {
   });
 
   const handleSuccess = async (tx) => {
+    showNotification("Transaction sent. Waiting for confirmation...");
     await tx.wait(1);
+    showNotification("Transaction complete!");
+  };
+
+  const showNotification = (message) => {
     dispatch({
       type: "info",
-      message: "Transaction complete!",
-      position: "topR",
+      message,
       title: "Enter lottery",
+      position: "topR",
     });
   };
 
@@ -49,7 +54,9 @@ export default function LotteryEntrance() {
         <div className="flex space-x-3">
           <Button
             onClick={async () =>
-              await enterLottery({ onSuccess: handleSuccess })
+              await enterLottery({
+                onSuccess: handleSuccess,
+              })
             }
             text="Enter lottery"
             theme="primary"
