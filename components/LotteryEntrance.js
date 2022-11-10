@@ -5,7 +5,13 @@ import { Button } from "web3uikit";
 import { useNotification } from "web3uikit";
 
 export default function LotteryEntrance() {
-  const { chainId: chainIdHex, isWeb3Enabled, Moralis } = useMoralis();
+  const {
+    chainId: chainIdHex,
+    isWeb3Enabled,
+    web3: provider,
+    Moralis,
+  } = useMoralis();
+  const ethers = Moralis.web3Library;
   const chainId = parseInt(chainIdHex);
   const contractAddress =
     chainId in contractAddresses ? contractAddresses[chainId][0] : null;
@@ -23,7 +29,16 @@ export default function LotteryEntrance() {
   };
 
   useEffect(() => {
-    isWeb3Enabled && updateUI();
+    if (isWeb3Enabled) {
+      updateUI();
+      if (contractAddress) {
+        const contract = new ethers.Contract(contractAddress, abi, provider);
+        contract.on("WinnerPick", () => {
+          updateUI();
+          console.log("We've got a winner!");
+        });
+      }
+    }
   }, [isWeb3Enabled, chainId]);
 
   // Notifications
@@ -40,7 +55,11 @@ export default function LotteryEntrance() {
 
   // Contract ABI
 
-  const { runContractFunction: enterLottery } = useWeb3Contract({
+  const {
+    runContractFunction: enterLottery,
+    isLoading,
+    isFetching,
+  } = useWeb3Contract({
     abi,
     contractAddress,
     functionName: "enterLottery",
@@ -89,6 +108,7 @@ export default function LotteryEntrance() {
               }
               text="Enter lottery"
               theme="primary"
+              disabled={isLoading || isFetching}
             />
             <p>Entrance fee: {Moralis.Units.FromWei(entranceFee)} ETH</p>
           </div>
