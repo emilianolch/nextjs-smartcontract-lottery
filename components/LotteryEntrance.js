@@ -29,14 +29,21 @@ export default function LotteryEntrance() {
   };
 
   useEffect(() => {
+    console.log("Entering useEffect");
     if (isWeb3Enabled) {
+      console.log("Web3 is enabled. Updating UI");
       updateUI();
       if (contractAddress) {
+        console.log("Contract detected. Registering event listener");
         const contract = new ethers.Contract(contractAddress, abi, provider);
+        contract
+          .queryFilter("WinnerPick")
+          .then((events) => console.log(events));
         contract.on("WinnerPick", () => {
           updateUI();
           console.log("We've got a winner!");
         });
+        console.log("Listeners registered:", contract.listeners("WinnerPick"));
       }
     }
   }, [isWeb3Enabled, chainId]);
